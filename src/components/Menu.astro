@@ -1,0 +1,26 @@
+---
+import data from "../../test.json";
+const pizzas = data.pizzas;
+---
+
+<div class="fade-slide-up" id="menu">
+  <section>
+    <h2>Nuestro Menu</h2>
+  </section>
+  <section>
+    <ul
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4"
+    >
+      {
+        pizzas.map((pizza) => (
+          <li class="border p-4 m-4 rounded-lg shadow-lg">
+            <img src={pizza.src} alt="" srcset="" class="w-3xs" />
+            <h2>{pizza.nombre_producto}</h2>
+            <h3>{pizza.Description}</h3>
+            <span>Precio: ${pizza.precio_unitario}</span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+</div>
