@@ -4,7 +4,7 @@
 
 <div class="fixed w-full z-100 top-0 left-0 bg-slate-50 shadow-xl">
   <header
-    class="flex justify-between items-center p-3.5 text-black w-full mx-auto px-10 fade-slide-down"
+    class="flex justify-between items-center p-2 text-black w-full mx-auto px-10 fade-slide-down"
   >
     <section>
       <img src="/logo8.jpg" class="w-24" />
@@ -25,9 +25,28 @@
       <nav class="flex gap-6 justify-center items-center text-black">
         <a
           class="opacity-80 hover:opacity-100 transition hover:scale-105 font-semibold"
-          href="#about">Sobre Nosotros</a
+          href="#aboutUs">Sobre Nosotros</a
         >
+        <!-- Agregar este botón donde prefieras -->
+        <button
+          id="logout-btn"
+          class="bg-[#C8102E] text-white px-4 py-2 rounded-lg hover:bg-[#a00d26] transition-colors"
+        >
+          Cerrar Sesión
+        </button>
       </nav>
     </section>
   </header>
 </div>
+
+<script>
+  document.getElementById("logout-btn")?.addEventListener("click", () => {
+    if (confirm("¿Seguro que deseas cerrar sesión?")) {
+      localStorage.removeItem("mussolini_user");
+      localStorage.removeItem("mussolini_token");
+      localStorage.removeItem("mussolini_session");
+      localStorage.removeItem("mussolini_cart"); // Limpiar carrito también
+      window.location.href = "/";
+    }
+  });
+</script>

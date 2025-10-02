@@ -1,0 +1,266 @@
+---
+/* Componente de Login mejorado con integración al sistema */
+---
+
+<div class="flex items-center justify-center min-h-screen bg-[#c1c1c1]">
+  <form
+    id="loginForm"
+    class="max-w-md mx-auto p-6 shadow-md rounded-2xl space-y-4 w-[90%] sm:w-[50%] bg-slate-50 border border-slate-50 fade"
+  >
+    <div class="text-center mb-6">
+      <h2 class="text-3xl font-bold text-zinc-950 mb-2">Pizzería Mussolini</h2>
+      <p class="text-sm text-gray-600">Inicia sesión para continuar</p>
+    </div>
+
+    <!-- Mensaje de error -->
+    <div
+      id="error-message"
+      class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+      role="alert"
+    >
+      <span class="block sm:inline" id="error-text"></span>
+    </div>
+
+    <div>
+      <label
+        for="username"
+        class="block text-sm font-medium text-zinc-950 mb-1"
+      >
+        Usuario o correo
+      </label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        required
+        placeholder="Ingresa tu usuario o email"
+        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-[#C8102E] focus:border-[#C8102E] p-3 transition-all"
+      />
+    </div>
+
+    <div>
+      <label
+        for="password"
+        class="block text-sm font-medium text-zinc-950 mb-1"
+      >
+        Contraseña
+      </label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        required
+        placeholder="Ingresa tu contraseña"
+        class="mt-1 block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-[#C8102E] focus:border-[#C8102E] p-3 transition-all"
+      />
+    </div>
+
+    <button
+      type="submit"
+      id="submit-btn"
+      class="bg-white text-[#C8102E] font-semibold px-6 py-3 rounded-lg border-2 border-[#C8102E]
+        hover:bg-[#C8102E] hover:text-white shadow-inner transition-colors duration-300
+        w-full mt-6 mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      Entrar
+    </button>
+
+    <!-- Credenciales de prueba (solo visible en modo MOCK) -->
+    <div
+      id="mock-credentials"
+      class="hidden text-xs text-center p-3 bg-blue-50 rounded border border-blue-200"
+    >
+      <p class="font-semibold mb-1">🧪 Modo de Prueba Activo</p>
+      <p><strong>Email:</strong> admin@mussolini.com</p>
+      <p><strong>Contraseña:</strong> 12345678</p>
+      <hr class="my-2" />
+      <p><strong>Email:</strong> jose@mussolini.com</p>
+      <p><strong>Contraseña:</strong> mesero123</p>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("loginForm");
+    const submitBtn = document.getElementById("submit-btn");
+    const errorMessage = document.getElementById("error-message");
+    const errorText = document.getElementById("error-text");
+    const mockCredentials = document.getElementById("mock-credentials");
+
+    if (!form) return;
+
+    // ---------- CONFIG ----------
+    const USE_MOCK = true; // Cambiar a false cuando uses tu API real
+    const API_URL = "http://localhost:8080/api/login";
+    // ----------------------------
+
+    // Mostrar credenciales de prueba si está en modo MOCK
+    if (USE_MOCK) {
+      mockCredentials?.classList.remove("hidden");
+    }
+
+    // ---------- Datos falsos para pruebas (coinciden con DB) ----------
+    const MOCK_USERS = [
+      {
+        id_usuario: 1,
+        nombre_usuario: "Administrador",
+        telefono: "1234-5678",
+        email: "admin@mussolini.com",
+        clave: "12345678", // Contraseña hasheada en producción
+        id_rol: 1,
+        nombre_rol: "administrador", // Del JOIN con tabla rol
+      },
+      {
+        id_usuario: 2,
+        nombre_usuario: "José García",
+        telefono: "7890-1234",
+        email: "jose@mussolini.com",
+        clave: "mesero123",
+        id_rol: 1, // Cambiar según tu tabla rol
+        nombre_rol: "administrador", // Ajustar según roles reales
+      },
+    ];
+    // -------------------------------------------------------------------
+
+    // Función para mostrar errores
+    const showError = (message) => {
+      errorText.textContent = message;
+      errorMessage?.classList.remove("hidden");
+      setTimeout(() => {
+        errorMessage?.classList.add("hidden");
+      }, 5000);
+    };
+
+    // Mock API Login
+    const mockApiLogin = (userInput, pass) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          const found = MOCK_USERS.find(
+            (u) => u.email === userInput && u.clave === pass
+          );
+          if (found) {
+            resolve({
+              success: true,
+              token: "fake-jwt-token-123456",
+              user: {
+                id_usuario: found.id_usuario,
+                nombre_usuario: found.nombre_usuario,
+                telefono: found.telefono,
+                email: found.email,
+                id_rol: found.id_rol,
+                nombre_rol: found.nombre_rol,
+              },
+            });
+          } else {
+            reject({ success: false, message: "Credenciales inválidas" });
+          }
+        }, 800);
+      });
+    };
+
+    // ---------- Manejo del form ----------
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const usernameInput = form.querySelector("#username");
+      const passwordInput = form.querySelector("#password");
+
+      if (!usernameInput || !passwordInput) {
+        showError("Faltan campos en el formulario");
+        return;
+      }
+
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!username || !password) {
+        showError("Por favor completa todos los campos");
+        return;
+      }
+
+      // Deshabilitar botón mientras procesa
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Iniciando sesión...";
+
+      try {
+        let result;
+
+        if (USE_MOCK) {
+          // --- LOGIN CON DATOS FALSOS ---
+          result = await mockApiLogin(username, password);
+          console.log("✅ Mock login exitoso:", result);
+        } else {
+          // --- LOGIN CON API REAL ---
+          const resp = await fetch(API_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (!resp.ok) {
+            if (resp.status === 401) {
+              throw new Error("Credenciales inválidas");
+            } else {
+              throw new Error(`Error del servidor: ${resp.status}`);
+            }
+          }
+
+          result = await resp.json();
+          console.log("✅ Respuesta backend:", result);
+        }
+
+        // ---------- Login exitoso ----------
+        // Guardar datos del usuario en localStorage
+        localStorage.setItem("mussolini_user", JSON.stringify(result.user));
+
+        // Guardar token si viene
+        if (result.token) {
+          localStorage.setItem("mussolini_token", result.token);
+        }
+
+        // Guardar flag de sesión
+        localStorage.setItem("mussolini_session", "active");
+
+        // Animación de éxito
+        submitBtn.textContent = "¡Bienvenido! Redirigiendo...";
+        submitBtn.classList.add(
+          "bg-green-500",
+          "border-green-500",
+          "text-white"
+        );
+
+        // Redirigir a home después de un breve delay
+        setTimeout(() => {
+          window.location.href = "/home";
+        }, 1000);
+      } catch (err) {
+        console.error("❌ Error login:", err);
+        showError(err.message || "Usuario o contraseña incorrectos");
+
+        // Restaurar botón
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Entrar";
+      }
+    });
+  });
+</script>
+
+<style>
+  .fade {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>

@@ -1,11 +1,36 @@
 ---
-import data from "../../test.json";
-const pizzas = data.pizzas;
+interface Pizza {
+  id_producto: number;
+  nombre_producto: string;
+  precio_unitario: number;
+  src: string;
+}
+
+let pizzas: Pizza[] = [];
+
+try {
+  const res = await fetch("http://localhost:8080/api/pizzas");
+  if (res.ok) {
+    pizzas = (await res.json()) as Pizza[];
+  } else {
+    console.error("Error al obtener pizzas:", res.status);
+
+    // fallback al JSON local
+    const data: unknown = (await import("../../test.json")).default;
+    pizzas = Array.isArray(data) ? (data as Pizza[]) : [];
+  }
+} catch (error) {
+  console.error("Error en fetch:", error);
+
+  // fallback si el fetch lanza error
+  const data: unknown = (await import("../../test.json")).default;
+  pizzas = Array.isArray(data) ? (data as Pizza[]) : [];
+}
 ---
 
-<div class="fade-slide-up" id="menu">
+<div class="fade-slide-up pt-24" id="menu">
   <section>
-    <h2>Nuestro Menu</h2>
+    <h2 class="font-bold text-center text-black text-4xl mt-4">Nuestro Menu</h2>
   </section>
   <section>
     <ul
@@ -13,14 +38,67 @@ const pizzas = data.pizzas;
     >
       {
         pizzas.map((pizza) => (
-          <li class="border p-4 m-4 rounded-lg shadow-lg">
-            <img src={pizza.src} alt="" srcset="" class="w-3xs" />
-            <h2>{pizza.nombre_producto}</h2>
-            <h3>{pizza.Description}</h3>
-            <span>Precio: ${pizza.precio_unitario}</span>
+          <li class="border p-4 m-4 rounded-lg shadow-lg flex flex-col justify-between">
+            <section>
+              <img
+                src={pizza.src}
+                alt={pizza.nombre_producto}
+                class="w-full h-48 object-cover rounded-lg"
+              />
+              <h2 class="font-bold text-xl mb-2 mt-4">
+                {pizza.nombre_producto}
+              </h2>
+            </section>
+            <section class="flex items-center justify-between mt-4">
+              <span class="bg-[#C8102E] font-bold text-slate-50 p-3.5 rounded-lg">
+                ${pizza.precio_unitario.toFixed(2)}
+              </span>
+              <button
+                class="add-to-cart-btn bg-white text-[#C8102E] font-semibold px-6 py-3 rounded-lg border-2 border-[#C8102E]
+        hover:bg-[#C8102E] hover:text-white shadow-inner transition-colors duration-300
+        w-fit self-center"
+                data-id={pizza.id_producto}
+                data-nombre={pizza.nombre_producto}
+                data-precio={pizza.precio_unitario}
+                data-src={pizza.src}
+              >
+                Ordena ahora!
+              </button>
+            </section>
           </li>
         ))
       }
     </ul>
   </section>
 </div>
+
+<script>
+  import { cartStore } from "../stores/cartStore";
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const buttons = document.querySelectorAll(".add-to-cart-btn");
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        const btn = e.currentTarget as HTMLElement;
+        const product = {
+          id_producto: parseInt(btn.dataset.id!),
+          nombre_producto: btn.dataset.nombre!,
+          precio_unitario: parseFloat(btn.dataset.precio!),
+          src: btn.dataset.src!,
+        };
+
+        cartStore.addItem(product);
+
+        // Animación visual
+        btn.textContent = "¡Agregado!";
+        btn.classList.add("bg-[#C8102E]", "text-white");
+
+        setTimeout(() => {
+          btn.textContent = "Ordena ahora!";
+          btn.classList.remove("bg-[#C8102E]", "text-white");
+        }, 1000);
+      });
+    });
+  });
+</script>

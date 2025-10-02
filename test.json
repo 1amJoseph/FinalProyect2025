@@ -1,32 +1,32 @@
-{
-    "pizzas": [
-        {
-            "id": 0,
-            "nombre_producto": "Pizza de peperoni",
-            "precio_unitario": 5.50,
-            "Description": "Pizza clasica de queso con peperonni crujiente",
-            "src": "/image1.jpg"
-        },
-        {
-            "id": 1,
-            "nombre_producto": "Pizza 4 estaciones",
-            "precio_unitario": 7.50,
-            "Description": "Pizza familiar con la opcion de elegir 4 sabores diferentes.",
-            "src": "/image1.jpg"
-        },
-        {
-            "id": 2,
-            "nombre_producto": "Pizza de jamon Hot cheese",
-            "precio_unitario": 4.75,
-            "Description": "Pizza clasica de jamon con orilla rellena de queso derretido, crujiente y lista para compartir en familia.",
-            "src": "/image1.jpg"
-        },
-        {
-            "id": 3,
-            "nombre_producto": "Pizza de carne",
-            "precio_unitario": 7.99,
-            "Description": "pizza clasica acompanada de carne molida, jamon y pepperoni",
-            "src": "/image1.jpg"
-        }
-    ]
-}
+[
+    {
+        "id_producto": 1,
+        "nombre_producto": "Pizza de peperoni",
+        "precio_unitario": 5.50,
+        "src": "/image1.jpg"
+    },
+    {
+        "id_producto": 2,
+        "nombre_producto": "Pizza 4 estaciones",
+        "precio_unitario": 7.50,
+        "src": "/image1.jpg"
+    },
+    {
+        "id_producto": 3,
+        "nombre_producto": "Pizza de jamon Hot cheese",
+        "precio_unitario": 4.75,
+        "src": "/image1.jpg"
+    },
+    {
+        "id_producto": 4,
+        "nombre_producto": "Pizza de carne",
+        "precio_unitario": 7.99,
+        "src": "/image1.jpg"
+    },
+    {
+        "id_producto": 5,
+        "nombre_producto": "Pizza hawaiana",
+        "precio_unitario": 3.55,
+        "src": "/image1.jpg"
+    }
+]

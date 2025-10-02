@@ -1,0 +1,287 @@
+<!-- src/components/FloatingCart.astro -->
+<div id="floating-cart-container">
+  <!-- Botón flotante -->
+  <button
+    id="cart-button"
+    class="fixed bottom-6 right-6 bg-[#C8102E] text-white rounded-full w-16 h-16 shadow-lg hover:bg-[#a00d26] transition-all duration-300 flex items-center justify-center z-50 hover:scale-110"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="h-8 w-8"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+      ></path>
+    </svg>
+    <span
+      id="cart-badge"
+      class="absolute -top-2 -right-2 bg-white text-[#C8102E] rounded-full w-7 h-7 flex items-center justify-center text-sm font-bold shadow-md hidden"
+    >
+      0
+    </span>
+  </button>
+
+  <!-- Modal del carrito -->
+  <div
+    id="cart-modal"
+    class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden transition-opacity duration-300"
+  >
+    <div
+      id="cart-drawer"
+      class="fixed right-0 top-0 h-full w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col"
+    >
+      <!-- Header -->
+      <div
+        class="bg-[#C8102E] text-white p-4 flex justify-between items-center"
+      >
+        <h2 class="text-2xl font-bold">Tu Pedido</h2>
+        <button
+          id="close-cart"
+          class="text-white hover:text-gray-200 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lista de productos -->
+      <div id="cart-items" class="flex-1 overflow-y-auto p-4">
+        <p class="text-gray-500 text-center mt-8" id="empty-cart-message">
+          Tu carrito está vacío
+        </p>
+      </div>
+
+      <!-- Footer con total y botón -->
+      <div class="border-t p-4 bg-gray-50">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-lg font-semibold">Total:</span>
+          <span id="cart-total" class="text-2xl font-bold text-[#C8102E]"
+            >$0.00</span
+          >
+        </div>
+        <button
+          id="checkout-button"
+          class="w-full bg-[#C8102E] text-white font-semibold py-3 rounded-lg hover:bg-[#a00d26] transition-colors duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          disabled
+        >
+          Realizar Pedido
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { cartStore } from "../stores/cartStore";
+  import type { CartItem } from "../stores/cartStore";
+
+  const cartButton = document.getElementById("cart-button");
+  const cartModal = document.getElementById("cart-modal");
+  const cartDrawer = document.getElementById("cart-drawer");
+  const closeCart = document.getElementById("close-cart");
+  const cartBadge = document.getElementById("cart-badge");
+  const cartItemsContainer = document.getElementById("cart-items");
+  const cartTotal = document.getElementById("cart-total");
+  const emptyMessage = document.getElementById("empty-cart-message");
+  const checkoutButton = document.getElementById("checkout-button");
+
+  function openCart() {
+    cartModal?.classList.remove("hidden");
+    setTimeout(() => {
+      cartDrawer?.classList.remove("translate-x-full");
+    }, 10);
+  }
+
+  function closeCartModal() {
+    cartDrawer?.classList.add("translate-x-full");
+    setTimeout(() => {
+      cartModal?.classList.add("hidden");
+    }, 300);
+  }
+
+  function updateCartUI() {
+    const items = cartStore.getItems();
+    const count = cartStore.getItemCount();
+    const total = cartStore.getTotal();
+
+    // Actualizar badge
+    if (count > 0) {
+      cartBadge!.textContent = count.toString();
+      cartBadge?.classList.remove("hidden");
+    } else {
+      cartBadge?.classList.add("hidden");
+    }
+
+    // Actualizar total
+    cartTotal!.textContent = `$${total.toFixed(2)}`;
+
+    // Actualizar lista de items
+    if (items.length === 0) {
+      emptyMessage?.classList.remove("hidden");
+      cartItemsContainer!.innerHTML = `<p class="text-gray-500 text-center mt-8">Tu carrito está vacío</p>`;
+      checkoutButton?.setAttribute("disabled", "true");
+    } else {
+      emptyMessage?.classList.add("hidden");
+      checkoutButton?.removeAttribute("disabled");
+
+      cartItemsContainer!.innerHTML = items
+        .map(
+          (item) => `
+        <div class="border-b pb-4 mb-4 last:border-b-0">
+          <div class="flex gap-3">
+            <img src="${item.src}" alt="${item.nombre_producto}" class="w-20 h-20 object-cover rounded-lg" />
+            <div class="flex-1">
+              <h3 class="font-semibold text-sm mb-1">${item.nombre_producto}</h3>
+              <p class="text-[#C8102E] font-bold">$${item.precio_unitario.toFixed(2)}</p>
+              <div class="flex items-center gap-2 mt-2">
+                <button 
+                  class="decrease-btn bg-gray-200 hover:bg-gray-300 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors"
+                  data-id="${item.id_producto}"
+                >
+                  -
+                </button>
+                <span class="font-semibold w-8 text-center">${item.cantidad}</span>
+                <button 
+                  class="increase-btn bg-[#C8102E] hover:bg-[#a00d26] text-white w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors"
+                  data-id="${item.id_producto}"
+                >
+                  +
+                </button>
+                <button 
+                  class="remove-btn ml-auto text-red-500 hover:text-red-700 transition-colors"
+                  data-id="${item.id_producto}"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+        )
+        .join("");
+
+      // Agregar event listeners a los botones
+      document.querySelectorAll(".increase-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).dataset.id!);
+          const item = items.find((i) => i.id_producto === id);
+          if (item) {
+            cartStore.updateQuantity(id, item.cantidad + 1);
+          }
+        });
+      });
+
+      document.querySelectorAll(".decrease-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).dataset.id!);
+          const item = items.find((i) => i.id_producto === id);
+          if (item) {
+            cartStore.updateQuantity(id, item.cantidad - 1);
+          }
+        });
+      });
+
+      document.querySelectorAll(".remove-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const id = parseInt((e.currentTarget as HTMLElement).dataset.id!);
+          if (confirm("¿Eliminar este producto del carrito?")) {
+            cartStore.removeItem(id);
+          }
+        });
+      });
+    }
+  }
+
+  // Event listeners
+  cartButton?.addEventListener("click", openCart);
+  closeCart?.addEventListener("click", closeCartModal);
+  cartModal?.addEventListener("click", (e) => {
+    if (e.target === cartModal) {
+      closeCartModal();
+    }
+  });
+
+  checkoutButton?.addEventListener("click", async () => {
+    const items = cartStore.getItems();
+    if (items.length === 0) return;
+
+    // 🔹 CAMBIO AQUÍ: Obtener usuario desde localStorage
+    const userData = localStorage.getItem("mussolini_user");
+    if (!userData) {
+      alert("⚠️ Sesión expirada. Por favor inicia sesión nuevamente.");
+      window.location.href = "/";
+      return;
+    }
+
+    const user = JSON.parse(userData);
+
+    // Preparar datos del pedido con usuario real
+    const pedido = {
+      id_cliente: 1, // TODO: Implementar sistema de clientes
+      id_usuario: user.id_usuario, // ✅ ID del usuario logueado
+      fecha: new Date().toISOString().split("T")[0],
+      id_mesa: 1, // TODO: Agregar selector de mesa
+      detalles: items.map((item) => ({
+        id_producto: item.id_producto,
+        cantidad: item.cantidad,
+        subtotal: (item.precio_unitario * item.cantidad).toFixed(2),
+      })),
+    };
+
+    try {
+      checkoutButton.textContent = "Procesando...";
+      checkoutButton.setAttribute("disabled", "true");
+
+      const response = await fetch("http://localhost:8080/api/recibos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(pedido),
+      });
+
+      if (response.ok) {
+        alert("¡Pedido realizado con éxito!");
+        cartStore.clear();
+        closeCartModal();
+      } else {
+        const error = await response.text();
+        alert(`Error al procesar el pedido: ${error}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error al conectar con el servidor. Por favor intenta nuevamente.");
+    } finally {
+      checkoutButton.textContent = "Realizar Pedido";
+      checkoutButton.removeAttribute("disabled");
+    }
+  });
+
+  // Suscribirse a cambios del carrito
+  cartStore.subscribe(() => {
+    updateCartUI();
+  });
+
+  // Inicializar UI
+  updateCartUI();
+</script>
