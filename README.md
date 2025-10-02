@@ -18,8 +18,8 @@ Current project structure:
 │   ├── pages
 │   |   └── index.astro
 |   |   └── home.astro
-    └── stores
-        └── cartStore.ts
+|   └── stores
+|       └── cartStore.ts
 └── package.json
 ```
 
